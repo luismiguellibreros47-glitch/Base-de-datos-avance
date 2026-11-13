@@ -1,0 +1,25 @@
+info:
+  name: Crear_producto
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:5001/api/productos
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "Audifonos USB",
+        "cantidad_stock": 0,
+        "nivel_minimo": 5,
+        "precioCompra": 45000,
+        "precioVenta": 85000,
+        "tarifa_iva": 0.19
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
