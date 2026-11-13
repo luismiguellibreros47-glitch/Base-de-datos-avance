@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERP - Gestión Comercial</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-badge">ERP</span>
+        <div>
+          <h1>Sistema Comercial</h1>
+          <small>MySQL + Flask + Docker</small>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-section="ventas">Ventas</button>
+        <button class="nav-btn" data-section="pedidos">Pedidos (Compras)</button>
+        <button class="nav-btn" data-section="productos">Productos</button>
+        <button class="nav-btn" data-section="terceros">Terceros</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="kpis">
+          <div class="kpi"><span>Productos</span><strong id="kpi-productos">0</strong></div>
+          <div class="kpi"><span>Terceros</span><strong id="kpi-terceros">0</strong></div>
+          <div class="kpi"><span>Pedidos</span><strong id="kpi-pedidos">0</strong></div>
+          <div class="kpi"><span>Ventas</span><strong id="kpi-ventas">0</strong></div>
+        </div>
+      </header>
+
+      <div id="alerta" class="alerta hidden"></div>
+
+      <section id="sec-ventas" class="section active">
+        <div class="card">
+          <h2>Registrar Nueva Venta</h2>
+          <form id="form-venta" class="form-grid">
+            <label>Cliente (Tercero)
+              <select id="venta-tercero" required></select>
+            </label>
+            <label>Usuario
+              <select id="venta-usuario" required></select>
+            </label>
+            <label>Estado
+              <select id="venta-estado">
+                <option value="Pagado">Pagado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Por Pagar">Por Pagar</option>
+                <option value="Enviado">Enviado</option>
+              </select>
+            </label>
+            <div class="full-width">
+              <div class="detail-header">
+                <h3>Productos de la Venta</h3>
+                <button type="button" class="btn btn-secondary" id="btn-add-venta-item">+ Agregar Producto</button>
+              </div>
+              <div id="venta-items" class="items-list"></div>
+              <div class="total-bar">Total estimado (con IVA): <strong id="venta-total">$0</strong></div>
+            </div>
+            <div class="full-width actions">
+              <button type="submit" class="btn btn-primary">Guardar Venta</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Historial de Ventas</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Usuario</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-ventas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-pedidos" class="section">
+        <div class="card">
+          <h2>Registrar Nuevo Pedido (Entrada de Stock)</h2>
+          <form id="form-pedido" class="form-grid">
+            <label>Proveedor (Tercero)
+              <select id="pedido-tercero" required></select>
+            </label>
+            <label>Usuario
+              <select id="pedido-usuario" required></select>
+            </label>
+            <label>Estado
+              <select id="pedido-estado">
+                <option value="Pendiente">Pendiente</option>
+                <option value="Pagado">Pagado</option>
+                <option value="Enviado">Enviado</option>
+                <option value="Por Pagar">Por Pagar</option>
+              </select>
+            </label>
+            <div class="full-width">
+              <div class="detail-header">
+                <h3>Productos del Pedido</h3>
+                <button type="button" class="btn btn-secondary" id="btn-add-pedido-item">+ Agregar Producto</button>
+              </div>
+              <div id="pedido-items" class="items-list"></div>
+              <div class="total-bar">Total estimado (con IVA): <strong id="pedido-total">$0</strong></div>
+            </div>
+            <div class="full-width actions">
+              <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Historial de Pedidos</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Fecha</th>
+                  <th>Proveedor</th>
+                  <th>Usuario</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pedidos"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-productos" class="section">
+        <div class="card">
+          <h2 id="titulo-form-producto">Nuevo Producto</h2>
+          <form id="form-producto" class="form-grid">
+            <input type="hidden" id="prod-id" />
+            <label>Nombre
+              <input type="text" id="prod-nombre" required maxlength="100" />
+            </label>
+            <label>Stock Actual
+              <input type="number" id="prod-stock" value="0" min="0" required />
+            </label>
+            <label>Nivel Mínimo
+              <input type="number" id="prod-minimo" value="5" min="0" required />
+            </label>
+            <label>Precio Compra
+              <input type="number" id="prod-compra" value="0" min="0" step="0.01" required />
+            </label>
+            <label>Precio Venta
+              <input type="number" id="prod-venta" value="0" min="0" step="0.01" required />
+            </label>
+            <label>Tarifa IVA (ej. 0.19)
+              <input type="number" id="prod-iva" value="0.19" min="0" max="1" step="0.01" required />
+            </label>
+            <div class="full-width actions">
+              <button type="submit" class="btn btn-primary">Guardar Producto</button>
+              <button type="button" class="btn btn-secondary hidden" id="btn-cancelar-prod">Cancelar Edición</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="detail-header">
+            <h2>Listado de Productos</h2>
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-todos-productos" /> Mostrar inactivos
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Stock</th>
+                  <th>Mínimo</th>
+                  <th>P. Compra</th>
+                  <th>P. Venta</th>
+                  <th>IVA</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-productos"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-terceros" class="section">
+        <div class="card">
+          <h2 id="titulo-form-tercero">Nuevo Tercero</h2>
+          <form id="form-tercero" class="form-grid">
+            <input type="hidden" id="terc-id" />
+            <label>Nombre / Razón Social
+              <input type="text" id="terc-nombre" required maxlength="100" />
+            </label>
+            <label>Correo
+              <input type="email" id="terc-correo" maxlength="100" />
+            </label>
+            <label>Contacto / Teléfono
+              <input type="text" id="terc-contacto" required maxlength="30" />
+            </label>
+            <div class="full-width actions">
+              <button type="submit" class="btn btn-primary">Guardar Tercero</button>
+              <button type="button" class="btn btn-secondary hidden" id="btn-cancelar-terc">Cancelar Edición</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="detail-header">
+            <h2>Listado de Terceros</h2>
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-todos-terceros" /> Mostrar inactivos
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Contacto</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-terceros"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal-detalle" class="modal hidden">
+    <div class="modal-content">
+      <div class="detail-header">
+        <h2 id="modal-titulo">Detalle</h2>
+        <button type="button" class="btn btn-secondary" id="modal-cerrar">Cerrar</button>
+      </div>
+      <div id="modal-info" class="modal-info"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Subtotal</th>
+              <th>IVA</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="modal-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
